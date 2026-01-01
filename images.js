@@ -16,7 +16,7 @@ router.post("/generate", async (req, res) => {
         Authorization: `Bearer ${process.env.XAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "grok-2-image",  // ← Modelo OFICIAL según docs.x.ai (diciembre 2025)
+        model: "grok-2-image-1212",
         prompt: prompt.trim(),
         n: 1,
       }),
