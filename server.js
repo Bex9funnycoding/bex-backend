@@ -1,68 +1,54 @@
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 
-const express = require('express');
-const cors = require('cors');
+// IMPORTA EL ROUTER DE IMÁGENES
+const imagesRouter = require("./routes/images");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
 
-app.post('/api/chat', async (req, res) => {
-  const { messages, userTier = 'free' } = req.body;
+// MONTAR RUTA DE IMÁGENES
+app.use("/api/images", imagesRouter);
 
-  let model = 'grok-4-fast-reasoning';
-  if (userTier === 'pro' || userTier === 'plus') {
-    model = 'grok-4';
-  }
+// ================== CHAT ==================
+app.post("/api/chat", async (req, res) => {
+  const { messages, userTier = "free" } = req.body;
+  let model = "grok-4-fast-reasoning";
+  if (["pro", "plus"].includes(userTier)) model = "grok-4";
 
   try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.XAI_API_KEY}`,
       },
       body: JSON.stringify({
         model,
-        messages: [
-          {
-            role: "system",
-            content: "You are BEX-AI. Respond fast, human-like, confident and natural. Speak English and Spanish automatically based on the user's language. Never mention model names or external companies."
-          },
-          ...messages
-        ],
+        messages,
         temperature: 0.7,
-        max_tokens: 4096
-      })
+        max_tokens: 4096,
+      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText);
-    }
-
     const data = await response.json();
-    let content = data.choices[0].message.content;
-
-    // Limpieza extra por si acaso
-    content = content
-      .replace(/\b(Grok|xAI|Elon|Musk|Twitter|X)\b/gi, 'BEX')
-      .replace(/soy Grok/gi, 'soy BEX-AI')
-      .trim();
-
-    res.json({ response: content });
-  } catch (error) {
-    console.error('Error:', error.message);
-    res.status(500).json({ error: 'Error interno. Intenta de nuevo.' });
+    const content = data?.choices?.[0]?.message?.content || "No response";
+    res.json({ response: content.trim() });
+  } catch (err) {
+    console.error("CHAT ERROR:", err);
+    res.status(500).json({ error: "Chat backend error" });
   }
 });
 
-app.get('/', (req, res) => {
-  res.json({ status: 'BEX-AI Backend activo ' });
+// ================== STATUS ==================
+app.get("/", (req, res) => {
+  res.json({ status: "BEX Backend online" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend corriendo en puerto ${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log(`🔥 BEX Backend running on port ${PORT}`)
+);
