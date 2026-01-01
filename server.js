@@ -46,7 +46,7 @@ app.post("/api/chat", async (req, res) => {
 
 // ================== STATUS ==================
 app.get("/", (req, res) => {
-  res.json({ status: "BEX Backend online" });
+  res.json({ status: "BEX Backend online - Grok images ready 🚀" });
 });
 
 app.listen(PORT, () =>
